@@ -1,5 +1,7 @@
 package fpinscala.exercises.datastructures
 
+import scala.annotation.tailrec
+
 /** `List` data type, parameterized on a type, `A`. */
 enum List[+A]:
   /** A `List` data constructor representing the empty list. */
@@ -47,27 +49,67 @@ object List: // `List` companion object. Contains functions for creating and wor
   def productViaFoldRight(ns: List[Double]): Double =
     foldRight(ns, 1.0, _ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
-  def tail[A](l: List[A]): List[A] = ???
+  def tail[A](l: List[A]): List[A] =
+    l match
+      case Nil => sys.error("Error")
+      case Cons(_, tail) => tail
 
-  def setHead[A](l: List[A], h: A): List[A] = ???
+  def setHead[A](l: List[A], h: A): List[A] = {
+    l match {
+      case Nil => sys.error("Error")
+      case Cons(_, tail) => Cons(h, tail)
+    }
+  }
 
-  def drop[A](l: List[A], n: Int): List[A] = ???
+  @tailrec
+  def drop[A](l: List[A], n: Int): List[A] = {
+      if n <= 0 then return l
+      l match
+        case Nil => Nil
+        case Cons(_, tail) => drop(tail, n - 1)
+  }
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = ???
+  @tailrec
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = {
+    l match
+      case Nil => l
+      case Cons(h, t) =>
+        if f(h) then dropWhile(t, f)
+        else l
+  }
 
-  def init[A](l: List[A]): List[A] = ???
+  def init[A](l: List[A]): List[A] =
+    l match
+      case Nil => sys.error("ERROR")
+      case Cons(h, Nil) => Nil
+      case Cons(h, Cons(_, Nil)) => Cons(h, Nil)
+      case Cons(h, t) => Cons(h, init(t))
 
-  def length[A](l: List[A]): Int = ???
+  def length[A](l: List[A]): Int =
+    foldRight(l, 0, (_, acc) => 1 + acc)
 
-  def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B = ???
+  @tailrec
+  def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B =
+    l match
+      case Nil => acc
+      case Cons(h, t) => foldLeft(t, f(acc, h), f)
 
-  def sumViaFoldLeft(ns: List[Int]): Int = ???
+  def sumViaFoldLeft(ns: List[Int]): Int =
+    foldLeft(ns, 0, (x, y) => x + y)
 
-  def productViaFoldLeft(ns: List[Double]): Double = ???
+  def productViaFoldLeft(ns: List[Double]): Double =
+    foldLeft(ns, 1, (x, y) => x * y)
 
-  def lengthViaFoldLeft[A](l: List[A]): Int = ???
+  def lengthViaFoldLeft[A](l: List[A]): Int =
+    foldLeft(l, 0, (acc, _) => acc + 1)
 
-  def reverse[A](l: List[A]): List[A] = ???
+  def reverse[A](l: List[A]): List[A] = {
+    l match
+      case Nil => l
+      case Cons(h, Nil) => l
+      case Cons(h, Cons(t, Nil)) => Cons(t, Cons(h, Nil))
+      case Cons(h, t) => reverse(t)
+  }
 
   def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] = ???
 
@@ -90,3 +132,10 @@ object List: // `List` companion object. Contains functions for creating and wor
   // def zipWith - TODO determine signature
 
   def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
+
+/*
+3.7: You can not shortcut recursion unless you explicitly passed in a predicate. You can return 0.0 when you encounter a 0.0
+though you'll still recurse to the end of the list.
+
+3.8: Seems like List(1, 2, 3) uses foldRight to construct the list. In other words, they are equivalent.
+*/
